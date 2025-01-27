@@ -52,10 +52,15 @@ void waitForPress(){
   delay(200);
 }
 
+void waitForButtonsRelease(){
+  while(digitalRead(PIN_BUTTON_1) == HIGH || digitalRead(PIN_BUTTON_2) == HIGH){
+  }
+}
+
 void startGame(int players, int playerButton) {
   int randNumber = random(3, 10);
 
-  setColor(255, 255); // Yellow light for "Ready"
+  setColor(255, 255);
   displayCentered("Get Ready!", nullptr);
 
   unsigned long startTime = millis();
@@ -64,6 +69,7 @@ void startGame(int players, int playerButton) {
       if(digitalRead(PIN_BUTTON_1) == HIGH){
         setColor(255, 0);
         displayCentered("Game Over!", "Player 1 Lost");
+        waitForButtonsRelease();
         waitForPress();
         return;
       }
@@ -71,6 +77,7 @@ void startGame(int players, int playerButton) {
       if(digitalRead(PIN_BUTTON_2) == HIGH){
         setColor(255, 0);
         displayCentered("Game Over!", "Player 2 Lost");
+        waitForButtonsRelease();
         waitForPress();
         return;
       }
@@ -79,12 +86,13 @@ void startGame(int players, int playerButton) {
     if (players == 1 && digitalRead(playerButton) == HIGH) {
       setColor(255, 0);
       displayCentered("Game Over!", "Too Early");
+      waitForButtonsRelease();
       waitForPress();
       return;
     }
   }
 
-  setColor(0, 255); // Green light for "Go"
+  setColor(0, 255);
   displayCentered("Go!", "Press Now!");
 
   unsigned long greenTime = millis();
@@ -120,6 +128,7 @@ void startGame(int players, int playerButton) {
     }
   }
 
+  waitForButtonsRelease();
   waitForPress();
 }
 
@@ -130,17 +139,19 @@ int selectPlayers() {
 
   while (true) {
     if (digitalRead(PIN_BUTTON_1) == HIGH) {
+      waitForButtonsRelease();
       clearRow(1);
       lcd.setCursor(0, 1);
       lcd.print("P1");
-      delay(200);
 
       while (true) {
         if (digitalRead(PIN_BUTTON_1) == HIGH) {
-          delay(200); // Debounce
+          waitForButtonsRelease();
+          delay(200);
           return 1; // Single Player (Button 1)
         }
         if (digitalRead(PIN_BUTTON_2) == HIGH) {
+          waitForButtonsRelease();
           lcd.setCursor(14, 1);
           lcd.print("P2");
           waitForPress();
@@ -150,17 +161,19 @@ int selectPlayers() {
     }
 
     if (digitalRead(PIN_BUTTON_2) == HIGH) {
+      waitForButtonsRelease();
       clearRow(1);
       lcd.setCursor(14, 1);
       lcd.print("P2");
-      delay(200);
 
       while (true) {
         if (digitalRead(PIN_BUTTON_2) == HIGH) {
-          delay(200); // Debounce
+          waitForButtonsRelease();
+          delay(200);
           return 3; // Single Player (Button 2)
         }
         if (digitalRead(PIN_BUTTON_1) == HIGH) {
+          waitForButtonsRelease();
           lcd.setCursor(0, 1);
           lcd.print("P1");
           waitForPress();
@@ -186,6 +199,7 @@ void setup() {
 
 void loop() {
   int mode = selectPlayers();
+  waitForButtonsRelease();
   delay(500);
   if (mode == 1) {
     startGame(1, PIN_BUTTON_1); // Single Player, Button 1
