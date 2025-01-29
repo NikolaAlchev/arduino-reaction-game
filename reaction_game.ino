@@ -8,6 +8,9 @@ const int PIN_GREEN = 10;
 const int PIN_BUTTON_1 = 7;
 const int PIN_BUTTON_2 = 8;
 
+int mode = -1;
+bool changeGameMode = true;
+
 void setColor(int R, int G) {
   analogWrite(PIN_RED, R);
   analogWrite(PIN_GREEN, G);
@@ -57,6 +60,24 @@ void waitForButtonsRelease(){
   }
 }
 
+void checkForGameModeChange(int players, int playerButton) {
+
+  int allowedButton1 = (players == 2) ? PIN_BUTTON_1 : playerButton;
+  int allowedButton2 = (players == 2) ? PIN_BUTTON_2 : playerButton;
+
+  while (digitalRead(allowedButton1) == LOW && digitalRead(allowedButton2) == LOW) {
+  }
+
+  unsigned long startTime = millis();
+
+  while (digitalRead(allowedButton1) == HIGH || digitalRead(allowedButton2) == HIGH) {
+    if (millis() - startTime >= 3000) {
+      changeGameMode = true;
+      return;
+    }
+  }
+}
+
 void startGame(int players, int playerButton) {
   int randNumber = random(3, 10);
 
@@ -69,16 +90,20 @@ void startGame(int players, int playerButton) {
       if(digitalRead(PIN_BUTTON_1) == HIGH){
         setColor(255, 0);
         displayCentered("Game Over!", "Player 1 Lost");
+        delay(200);
         waitForButtonsRelease();
-        waitForPress();
+        delay(200);
+        checkForGameModeChange(players, playerButton);
         return;
       }
 
       if(digitalRead(PIN_BUTTON_2) == HIGH){
         setColor(255, 0);
         displayCentered("Game Over!", "Player 2 Lost");
+        delay(200);
         waitForButtonsRelease();
-        waitForPress();
+        delay(200);
+        checkForGameModeChange(players, playerButton);
         return;
       }
       
@@ -86,8 +111,10 @@ void startGame(int players, int playerButton) {
     if (players == 1 && digitalRead(playerButton) == HIGH) {
       setColor(255, 0);
       displayCentered("Game Over!", "Too Early");
+      delay(200);
       waitForButtonsRelease();
-      waitForPress();
+      delay(200);
+      checkForGameModeChange(players, playerButton);
       return;
     }
   }
@@ -129,13 +156,16 @@ void startGame(int players, int playerButton) {
   }
 
   waitForButtonsRelease();
-  waitForPress();
+  delay(200);
+  checkForGameModeChange(players, playerButton);
 }
 
 int selectPlayers() {
   lcd.clear();
 
   displayCentered("Press Button", "1 or 2 to Start");
+
+  waitForButtonsRelease();
 
   while (true) {
     if (digitalRead(PIN_BUTTON_1) == HIGH) {
@@ -154,7 +184,7 @@ int selectPlayers() {
           waitForButtonsRelease();
           lcd.setCursor(14, 1);
           lcd.print("P2");
-          waitForPress();
+          delay(200);
           return 2; // Two Players
         }
       }
@@ -176,7 +206,7 @@ int selectPlayers() {
           waitForButtonsRelease();
           lcd.setCursor(0, 1);
           lcd.print("P1");
-          waitForPress();
+          delay(200);
           return 2; // Two Players
         }
       }
@@ -198,7 +228,10 @@ void setup() {
 }
 
 void loop() {
-  int mode = selectPlayers();
+  if (changeGameMode){
+    mode = selectPlayers();
+    changeGameMode = false;
+  }
   waitForButtonsRelease();
   delay(500);
   if (mode == 1) {
